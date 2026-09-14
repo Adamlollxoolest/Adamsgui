@@ -324,7 +324,7 @@ local function isKillerOrMonster(model)
 	end
 	
 	if not isExplicitKiller then
-		if hum.WalkSpeed <=o and hum.MoveDirection.Magnitude == 0 then
+		if hum.WalkSpeed <= 0 and hum.MoveDirection.Magnitude == 0 then
 			return false
 		end
 	end
@@ -420,7 +420,7 @@ minimizeBtn.MouseButton1Click:Connect(function()
 	end
 end)
 
--- Movement Check (Works for Keyboard WASD, Mobile Thumbstick, and iPad joysticks)
+-- Movement Check
 local function isPlayerWalking()
 	local char = player.Character
 	if char then
