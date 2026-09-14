@@ -37,7 +37,7 @@ screenGui.Name = "SpeedJumpGui"
 screenGui.ResetOnSpawn = false
 screenGui.Parent = playerGui
 
--- Main Frame (Made longer to fit the new button)
+-- Main Frame
 local frame = Instance.new("Frame")
 frame.Size = UDim2.new(0, 220, 0, 295)
 frame.Position = UDim2.new(0.5, -110, 0.5, -147.5)
@@ -85,7 +85,7 @@ minimizeBtn.Font = Enum.Font.SourceSansBold
 minimizeBtn.ZIndex = 2
 minimizeBtn.Parent = frame
 
--- Content Container (Holds everything except the top bar)
+-- Content Container
 local contentContainer = Instance.new("Frame")
 contentContainer.Size = UDim2.new(1, 0, 0, 265)
 contentContainer.Position = UDim2.new(0, 0, 0, 30)
@@ -171,7 +171,7 @@ local btnCorner3 = Instance.new("UICorner")
 btnCorner3.CornerRadius = UDim.new(0, 6)
 btnCorner3.Parent = noclipBtn
 
--- ESP / Highlight Monsters Toggle Button
+-- ESP Toggle Button
 local espBtn = Instance.new("TextButton")
 espBtn.Size = UDim2.new(0, 200, 0, 35)
 espBtn.Position = UDim2.new(0.5, -100, 0, 174)
@@ -213,7 +213,7 @@ end
 
 applyBtn.MouseButton1Click:Connect(applyStats)
 
--- Logic: Reset stats to scanned defaults and update character values immediately
+-- Logic: Reset stats
 resetBtn.MouseButton1Click:Connect(function()
 	speedBox.Text = tostring(defaultSpeed)
 	jumpBox.Text = tostring(defaultJump)
@@ -227,7 +227,7 @@ resetBtn.MouseButton1Click:Connect(function()
 	end
 end)
 
--- Logic: Noclip (Safe on HumanoidRootPart)
+-- Logic: Noclip
 local noclipEnabled = false
 noclipBtn.MouseButton1Click:Connect(function()
 	noclipEnabled = not noclipEnabled
@@ -259,7 +259,7 @@ runService.Stepped:Connect(function()
 	end
 end)
 
--- Logic: Strict Display/Shop/Dummy Blocking ESP
+-- Logic: ESP
 local espEnabled = false
 local activeHighlights = {}
 
@@ -277,7 +277,6 @@ end
 
 local function isKillerOrMonster(model)
 	local name = model.Name:lower()
-	
 	local blacklist = {
 		"shop", "merchant", "npc", "dummy", "train", "guide", "citizen", "seller", "dealer", 
 		"quest", "baker", "safe", "starter", "buy", "purchase", "item", "weapon", "gun", 
@@ -325,7 +324,7 @@ local function isKillerOrMonster(model)
 	end
 	
 	if not isExplicitKiller then
-		if hum.WalkSpeed <= 0 and hum.MoveDirection.Magnitude == 0 then
+		if hum.WalkSpeed <=o and hum.MoveDirection.Magnitude == 0 then
 			return false
 		end
 	end
@@ -390,7 +389,7 @@ player.CharacterAdded:Connect(function(char)
 	applyStats()
 end)
 
--- Close Functionality (Restores scanned defaults & unloads GUI)
+-- Close Functionality
 closeBtn.MouseButton1Click:Connect(function()
 	local char = player.Character
 	if char then
@@ -404,7 +403,7 @@ closeBtn.MouseButton1Click:Connect(function()
 	screenGui:Destroy()
 end)
 
--- Minimize Functionality (Hides content container and shrinks frame so title stays put at the top)
+-- Minimize Functionality
 local minimized = false
 local tweenInfo = TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 
@@ -421,7 +420,7 @@ minimizeBtn.MouseButton1Click:Connect(function()
 	end
 end)
 
--- Helper function to check if the player is currently walking/moving
+-- Movement Check (Works for Keyboard WASD, Mobile Thumbstick, and iPad joysticks)
 local function isPlayerWalking()
 	local char = player.Character
 	if char then
@@ -433,7 +432,7 @@ local function isPlayerWalking()
 	return false
 end
 
--- Robust Whole-GUI 1-Finger Dragging System (Blocked while walking)
+-- Universal Movement-Lock Dragging System
 local dragging = false
 local dragInput = nil
 local dragStart = nil
