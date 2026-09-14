@@ -54,7 +54,7 @@ local titleLabel = Instance.new("TextLabel")
 titleLabel.Size = UDim2.new(1, -60, 0, 30)
 titleLabel.Position = UDim2.new(0, 10, 0, 0)
 titleLabel.BackgroundTransparency = 1
-titleLabel.Text = "Speed & Jump Menu"
+titleLabel.Text = "Adam’s gui"
 titleLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
 titleLabel.TextSize = 14
 titleLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -259,17 +259,82 @@ runService.Stepped:Connect(function()
 	end
 end)
 
--- Logic: Monster ESP / Highlights
+-- Logic: Strict Display/Shop/Dummy Blocking ESP
 local espEnabled = false
 local activeHighlights = {}
 
 local function clearHighlights()
-	for _, highlight in pairs(activeHighlights) do
+	local index = 1
+	while index <= #activeHighlights do
+		local highlight = activeHighlights[index]
 		if highlight then
 			highlight:Destroy()
 		end
+		index = index + 1
 	end
 	activeHighlights = {}
+end
+
+local function isKillerOrMonster(model)
+	local name = model.Name:lower()
+	
+	-- Strict blacklist to ensure shops, dummies, mannequins, and safe entities are ignored
+	local blacklist = {
+		"shop", "merchant", "npc", "dummy", "train", "guide", "citizen", "seller", "dealer", 
+		"quest", "baker", "safe", "starter", "buy", "purchase", "item", "weapon", "gun", 
+		"sword", "chest", "crate", "box", "upgrade", "gacha", "spin", "pet", "egg", "button", "door", "display", "mannequin", "shirt"
+	}
+	local bIndex = 1
+	while bIndex <= #blacklist do
+		local term = blacklist[bIndex]
+		if name:find(term) then
+			return false
+		end
+		bIndex = bIndex + 1
+	end
+	
+	-- Check if it's anchored or sitting on a display pedestal/part (like the Lethal Ape Shirt stand)
+	local rootPart = model:FindFirstChild("HumanoidRootPart") or model.PrimaryPart or model:FindFirstChild("Torso") or model:FindFirstChild("UpperTorso")
+	if rootPart and not rootPart.Anchored then
+		-- Double-check if parent or children contain apparel/accessory names typical of display stands
+		local parent = model.Parent
+		if parent and (parent.Name:lower():find("display") or parent.Name:lower():find("stand") or parent.Name:lower():find("shop")) then
+			return false
+		end
+	else
+		-- If anchored or has no root movement, it's a static display/dummy
+		return false
+	end
+	
+	local hum = model:FindFirstChildOfClass("Humanoid")
+	if not hum or not rootPart then return false end
+	if players:GetPlayerFromCharacter(model) then return false end
+	if hum.Health <= 0 then return false end
+	
+	local killerKeywords = {
+		"monster", "boss", "zombie", "enemy", "killer", "murderer", "ghost", "demon", 
+		"beast", "creature", "mutant", "alien", "infected", "slender", "nextbot", "target", 
+		"hunter", "evil", "hostile", "attacker", "entity", "corrupt", "shadow"
+	}
+	
+	local isExplicitKiller = false
+	local kIndex = 1
+	while kIndex <= #killerKeywords do
+		local keyword = killerKeywords[kIndex]
+		if name:find(keyword) then
+			isExplicitKiller = true
+			break
+		end
+		kIndex = kIndex + 1
+	end
+	
+	if not isExplicitKiller then
+		if hum.WalkSpeed <= 0 and hum.MoveDirection.Magnitude == 0 then
+			return false
+		end
+	end
+	
+	return true
 end
 
 local function updateESP()
@@ -278,12 +343,12 @@ local function updateESP()
 		return
 	end
 	
-	-- Scans workspace for potential monsters/NPCs (models with a Humanoid that aren't players)
-	for _, obj in ipairs(workspace:GetDescendants()) do
+	local descendants = workspace:GetDescendants()
+	local dIndex = 1
+	while dIndex <= #descendants do
+		local obj = descendants[dIndex]
 		if obj:IsA("Model") and obj ~= player.Character then
-			local hum = obj:FindFirstChildOfClass("Humanoid")
-			if hum and not players:GetPlayerFromCharacter(obj) then
-				-- Check if it doesn't already have our highlight
+			if isKillerOrMonster(obj) then
 				if not obj:FindFirstChild("MonsterHighlight") then
 					local highlight = Instance.new("Highlight")
 					highlight.Name = "MonsterHighlight"
@@ -295,8 +360,14 @@ local function updateESP()
 					highlight.Parent = obj
 					table.insert(activeHighlights, highlight)
 				end
+			else
+				local existing = obj:FindFirstChild("MonsterHighlight")
+				if existing then
+					existing:Destroy()
+				end
 			end
 		end
+		dIndex = dIndex + 1
 	end
 end
 
