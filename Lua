@@ -259,7 +259,7 @@ runService.Stepped:Connect(function()
 	end
 end)
 
--- Logic: ESP
+-- Logic: Smart Monster ESP (Ignores shop dummies, stands, and non-moving entities)
 local espEnabled = false
 local activeHighlights = {}
 
@@ -275,59 +275,27 @@ local function clearHighlights()
 	activeHighlights = {}
 end
 
-local function isKillerOrMonster(model)
+local function isMonster(model)
 	local name = model.Name:lower()
-	local blacklist = {
-		"shop", "merchant", "npc", "dummy", "train", "guide", "citizen", "seller", "dealer", 
-		"quest", "baker", "safe", "starter", "buy", "purchase", "item", "weapon", "gun", 
-		"sword", "chest", "crate", "box", "upgrade", "gacha", "spin", "pet", "egg", "button", "door", "display", "mannequin", "shirt"
-	}
-	local bIndex = 1
-	while bIndex <= #blacklist do
-		local term = blacklist[bIndex]
-		if name:find(term) then
-			return false
-		end
-		bIndex = bIndex + 1
-	end
+	local parentName = model.Parent and model.Parent.Name:lower() or ""
 	
-	local rootPart = model:FindFirstChild("HumanoidRootPart") or model.PrimaryPart or model:FindFirstChild("Torso") or model:FindFirstChild("UpperTorso")
-	if rootPart and not rootPart.Anchored then
-		local parent = model.Parent
-		if parent and (parent.Name:lower():find("display") or parent.Name:lower():find("stand") or parent.Name:lower():find("shop")) then
+	-- Blacklist names that indicate shop displays, dummies, or clothing stands
+	local blacklist = {"shop", "merchant", "npc", "dummy", "train", "guide", "citizen", "seller", "dealer", "quest", "baker", "starter", "buy", "item", "weapon", "chest", "crate", "display", "mannequin", "shirt", "stand"}
+	for _, term in ipairs(blacklist) do
+		if name:find(term) or parentName:find(term) then
 			return false
 		end
-	else
-		return false
 	end
 	
 	local hum = model:FindFirstChildOfClass("Humanoid")
+	local rootPart = model:FindFirstChild("HumanoidRootPart") or model.PrimaryPart or model:FindFirstChild("Torso")
+	
 	if not hum or not rootPart then return false end
 	if players:GetPlayerFromCharacter(model) then return false end
 	if hum.Health <= 0 then return false end
 	
-	local killerKeywords = {
-		"monster", "boss", "zombie", "enemy", "killer", "murderer", "ghost", "demon", 
-		"beast", "creature", "mutant", "alien", "infected", "slender", "nextbot", "target", 
-		"hunter", "evil", "hostile", "attacker", "entity", "corrupt", "shadow"
-	}
-	
-	local isExplicitKiller = false
-	local kIndex = 1
-	while kIndex <= #killerKeywords do
-		local keyword = killerKeywords[kIndex]
-		if name:find(keyword) then
-			isExplicitKiller = true
-			break
-		end
-		kIndex = kIndex + 1
-	end
-	
-	if not isExplicitKiller then
-		if hum.WalkSpeed <= 0 and hum.MoveDirection.Magnitude == 0 then
-			return false
-		end
-	end
+	-- Ignore anchored models (dummies/shop owners usually don't move or are anchored)
+	if rootPart.Anchored then return false end
 	
 	return true
 end
@@ -343,7 +311,7 @@ local function updateESP()
 	while dIndex <= #descendants do
 		local obj = descendants[dIndex]
 		if obj:IsA("Model") and obj ~= player.Character then
-			if isKillerOrMonster(obj) then
+			if isMonster(obj) then
 				if not obj:FindFirstChild("MonsterHighlight") then
 					local highlight = Instance.new("Highlight")
 					highlight.Name = "MonsterHighlight"
