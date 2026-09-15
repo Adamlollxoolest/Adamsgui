@@ -498,22 +498,29 @@ minimizeBtn.MouseButton1Click:Connect(function()
 	end
 end)
 
--- Robust Whole-GUI 1-Finger Dragging System (Locks position while moving)
+-- Robust Whole-GUI 1-Finger Dragging System (Strict Movement Lock)
 local dragging = false
 local dragInput = nil
 local dragStart = nil
 local startPos = nil
 
+local function isPlayerMoving()
+	local char = player.Character
+	if not char then return false end
+	local hum = char:FindFirstChildOfClass("Humanoid")
+	local root = char:FindFirstChild("HumanoidRootPart")
+	
+	if hum and root then
+		if hum.MoveDirection.Magnitude > 0.05 or root.AssemblyLinearVelocity.Magnitude > 1.5 then
+			return true
+		end
+	end
+	return false
+end
+
 frame.InputBegan:Connect(function(input)
 	if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) and not dragging then
-		local char = player.Character
-		local hum = char and char:FindFirstChildOfClass("Humanoid")
-		
-		-- Check if player is currently walking/moving
-		local isMoving = hum and hum.MoveDirection.Magnitude > 0
-		
-		-- Only allow dragging if NOT moving
-		if not isMoving then
+		if not isPlayerMoving() then
 			dragging = true
 			dragInput = input
 			dragStart = input.Position
@@ -533,11 +540,7 @@ end)
 
 userInputService.InputChanged:Connect(function(input)
 	if dragging and input == dragInput and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-		local char = player.Character
-		local hum = char and char:FindFirstChildOfClass("Humanoid")
-		
-		-- Instantly cancel drag if player starts moving mid-drag
-		if hum and hum.MoveDirection.Magnitude > 0 then
+		if isPlayerMoving() then
 			dragging = false
 			dragInput = nil
 		else
