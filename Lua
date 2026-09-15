@@ -528,3 +528,533 @@ userInputService.InputChanged:Connect(function(input)
 		frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
 	end
 end)
+local players = game:GetService("Players")
+local player = players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+local tweenService = game:GetService("TweenService")
+local userInputService = game:GetService("UserInputService")
+local runService = game:GetService("RunService")
+local lighting = game:GetService("Lighting")
+
+-- Scans the game's actual starting speed/jump right away
+local defaultSpeed = 16
+local defaultJump = 50
+
+local function cacheDefaults()
+	local char = player.Character
+	if char then
+		local hum = char:FindFirstChildOfClass("Humanoid")
+		if hum then
+			defaultSpeed = hum.WalkSpeed
+			defaultJump = hum.JumpPower
+		end
+	end
+end
+
+cacheDefaults()
+player.CharacterAdded:Connect(function(char)
+	task.wait(0.5)
+	cacheDefaults()
+end)
+
+-- Remove old GUI if it exists
+if playerGui:FindFirstChild("SpeedJumpGui") then
+	playerGui.SpeedJumpGui:Destroy()
+end
+
+-- Main ScreenGui
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "SpeedJumpGui"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = playerGui
+
+-- Main Frame (Made longer to fit the new button)
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 220, 0, 338)
+frame.Position = UDim2.new(0.5, -110, 0.5, -169)
+frame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+frame.ClipsDescendants = true
+frame.Parent = screenGui
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 8)
+corner.Parent = frame
+
+-- Title Label
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Size = UDim2.new(1, -60, 0, 30)
+titleLabel.Position = UDim2.new(0, 10, 0, 0)
+titleLabel.BackgroundTransparency = 1
+titleLabel.Text = "Adam’s GUI"
+titleLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+titleLabel.TextSize = 14
+titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+titleLabel.Font = Enum.Font.SourceSansBold
+titleLabel.Parent = frame
+
+-- Close / X Button
+local closeBtn = Instance.new("TextButton")
+closeBtn.Size = UDim2.new(0, 30, 0, 30)
+closeBtn.Position = UDim2.new(1, -30, 0, 0)
+closeBtn.BackgroundTransparency = 1
+closeBtn.Text = "X"
+closeBtn.TextColor3 = Color3.fromRGB(200, 80, 80)
+closeBtn.TextSize = 16
+closeBtn.Font = Enum.Font.SourceSansBold
+closeBtn.ZIndex = 2
+closeBtn.Parent = frame
+
+-- Minimize / Minus Button
+local minimizeBtn = Instance.new("TextButton")
+minimizeBtn.Size = UDim2.new(0, 30, 0, 30)
+minimizeBtn.Position = UDim2.new(1, -60, 0, 0)
+minimizeBtn.BackgroundTransparency = 1
+minimizeBtn.Text = "-"
+minimizeBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
+minimizeBtn.TextSize = 20
+minimizeBtn.Font = Enum.Font.SourceSansBold
+minimizeBtn.ZIndex = 2
+minimizeBtn.Parent = frame
+
+-- Content Container (Holds everything except the top bar)
+local contentContainer = Instance.new("Frame")
+contentContainer.Size = UDim2.new(1, 0, 0, 308)
+contentContainer.Position = UDim2.new(0, 0, 0, 30)
+contentContainer.BackgroundTransparency = 1
+contentContainer.Parent = frame
+
+-- Speed TextBox
+local speedBox = Instance.new("TextBox")
+speedBox.Size = UDim2.new(0, 200, 0, 35)
+speedBox.Position = UDim2.new(0.5, -100, 0, 5)
+speedBox.PlaceholderText = "Speed"
+speedBox.PlaceholderColor3 = Color3.fromRGB(120, 120, 120)
+speedBox.Text = ""
+speedBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+speedBox.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+speedBox.TextSize = 14
+speedBox.Font = Enum.Font.SourceSans
+speedBox.Parent = contentContainer
+
+local speedCorner = Instance.new("UICorner")
+speedCorner.CornerRadius = UDim.new(0, 6)
+speedCorner.Parent = speedBox
+
+-- Jump Power TextBox
+local jumpBox = Instance.new("TextBox")
+jumpBox.Size = UDim2.new(0, 200, 0, 35)
+jumpBox.Position = UDim2.new(0.5, -100, 0, 48)
+jumpBox.PlaceholderText = "JumpPower"
+jumpBox.PlaceholderColor3 = Color3.fromRGB(120, 120, 120)
+jumpBox.Text = ""
+jumpBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+jumpBox.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+jumpBox.TextSize = 14
+jumpBox.Font = Enum.Font.SourceSans
+jumpBox.Parent = contentContainer
+
+local jumpCorner = Instance.new("UICorner")
+jumpCorner.CornerRadius = UDim.new(0, 6)
+jumpCorner.Parent = jumpBox
+
+-- Apply Button
+local applyBtn = Instance.new("TextButton")
+applyBtn.Size = UDim2.new(0, 95, 0, 35)
+applyBtn.Position = UDim2.new(0.5, -100, 0, 90)
+applyBtn.Text = "Apply"
+applyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+applyBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
+applyBtn.TextSize = 14
+applyBtn.Font = Enum.Font.SourceSansBold
+applyBtn.Parent = contentContainer
+
+local btnCorner1 = Instance.new("UICorner")
+btnCorner1.CornerRadius = UDim.new(0, 6)
+btnCorner1.Parent = applyBtn
+
+-- Reset Stats Button
+local resetBtn = Instance.new("TextButton")
+resetBtn.Size = UDim2.new(0, 95, 0, 35)
+resetBtn.Position = UDim2.new(0.5, 5, 0, 90)
+resetBtn.Text = "Reset Stats"
+resetBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+resetBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+resetBtn.TextSize = 14
+resetBtn.Font = Enum.Font.SourceSansBold
+resetBtn.Parent = contentContainer
+
+local btnCorner2 = Instance.new("UICorner")
+btnCorner2.CornerRadius = UDim.new(0, 6)
+btnCorner2.Parent = resetBtn
+
+-- Noclip Toggle Button
+local noclipBtn = Instance.new("TextButton")
+noclipBtn.Size = UDim2.new(0, 200, 0, 35)
+noclipBtn.Position = UDim2.new(0.5, -100, 0, 132)
+noclipBtn.Text = "Noclip: OFF"
+noclipBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+noclipBtn.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+noclipBtn.TextSize = 14
+noclipBtn.Font = Enum.Font.SourceSansBold
+noclipBtn.Parent = contentContainer
+
+local btnCorner3 = Instance.new("UICorner")
+btnCorner3.CornerRadius = UDim.new(0, 6)
+btnCorner3.Parent = noclipBtn
+
+-- ESP / Highlight Monsters Toggle Button
+local espBtn = Instance.new("TextButton")
+espBtn.Size = UDim2.new(0, 200, 0, 35)
+espBtn.Position = UDim2.new(0.5, -100, 0, 174)
+espBtn.Text = "Monster ESP: OFF"
+espBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+espBtn.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+espBtn.TextSize = 14
+espBtn.Font = Enum.Font.SourceSansBold
+espBtn.Parent = contentContainer
+
+local btnCorner4 = Instance.new("UICorner")
+btnCorner4.CornerRadius = UDim.new(0, 6)
+btnCorner4.Parent = espBtn
+
+-- Remove Fog Toggle Button
+local fogBtn = Instance.new("TextButton")
+fogBtn.Size = UDim2.new(0, 200, 0, 35)
+fogBtn.Position = UDim2.new(0.5, -100, 0, 216)
+fogBtn.Text = "Remove Fog: OFF"
+fogBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+fogBtn.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+fogBtn.TextSize = 14
+fogBtn.Font = Enum.Font.SourceSansBold
+fogBtn.Parent = contentContainer
+
+local btnCorner5 = Instance.new("UICorner")
+btnCorner5.CornerRadius = UDim.new(0, 6)
+btnCorner5.Parent = fogBtn
+
+-- Made By Admmmo6 Label
+local creditLabel = Instance.new("TextLabel")
+creditLabel.Size = UDim2.new(0, 200, 0, 20)
+creditLabel.Position = UDim2.new(0.5, -100, 0, 260)
+creditLabel.BackgroundTransparency = 1
+creditLabel.Text = "Made by: Admmmo6"
+creditLabel.TextColor3 = Color3.fromRGB(140, 140, 140)
+creditLabel.TextSize = 12
+creditLabel.Font = Enum.Font.SourceSansItalic
+creditLabel.Parent = contentContainer
+
+-- Logic: Apply stats
+local function applyStats()
+	local char = player.Character
+	if char then
+		local hum = char:FindFirstChildOfClass("Humanoid")
+		if hum then
+			local newSpeed = tonumber(speedBox.Text)
+			local newJump = tonumber(jumpBox.Text)
+			if newSpeed then hum.WalkSpeed = newSpeed end
+			if newJump then hum.JumpPower = newJump end
+		end
+	end
+end
+
+applyBtn.MouseButton1Click:Connect(applyStats)
+
+-- Logic: Reset stats to scanned defaults and update character values immediately
+resetBtn.MouseButton1Click:Connect(function()
+	speedBox.Text = tostring(defaultSpeed)
+	jumpBox.Text = tostring(defaultJump)
+	local char = player.Character
+	if char then
+		local hum = char:FindFirstChildOfClass("Humanoid")
+		if hum then
+			hum.WalkSpeed = defaultSpeed
+			hum.JumpPower = defaultJump
+		end
+	end
+end)
+
+-- Logic: Noclip (Safe on HumanoidRootPart)
+local noclipEnabled = false
+noclipBtn.MouseButton1Click:Connect(function()
+	noclipEnabled = not noclipEnabled
+	if noclipEnabled then
+		noclipBtn.Text = "Noclip: ON"
+		noclipBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 80)
+	else
+		noclipBtn.Text = "Noclip: OFF"
+		noclipBtn.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+		local char = player.Character
+		if char then
+			local root = char:FindFirstChild("HumanoidRootPart")
+			if root then
+				root.CanCollide = true
+			end
+		end
+	end
+end)
+
+runService.Stepped:Connect(function()
+	if noclipEnabled then
+		local char = player.Character
+		if char then
+			local root = char:FindFirstChild("HumanoidRootPart")
+			if root then
+				root.CanCollide = false
+			end
+		end
+	end
+end)
+
+-- Logic: Strict Monster ESP (Filters out NPCs, Shop Keepers, Dummies, and Safe Entities)
+local espEnabled = false
+local activeHighlights = {}
+
+local function clearHighlights()
+	for _, highlight in pairs(activeHighlights) do
+		if highlight then
+			highlight:Destroy()
+		end
+	end
+	activeHighlights = {}
+end
+
+local function isMonster(model)
+	local name = model.Name:lower()
+	
+	local blacklist = {"shop", "merchant", "npc", "dummy", "train", "guide", "citizen", "seller", "dealer", "quest", "baker", "safe", "starter"}
+	for _, term in ipairs(blacklist) do
+		if name:find(term) then
+			return false
+		end
+	end
+	
+	local hum = model:FindFirstChildOfClass("Humanoid")
+	local rootPart = model:FindFirstChild("HumanoidRootPart") or model.PrimaryPart or model:FindFirstChild("Torso") or model:FindFirstChild("UpperTorso")
+	
+	if not hum or not rootPart then return false end
+	if players:GetPlayerFromCharacter(model) then return false end
+	if hum.Health <= 0 then return false end
+	
+	if hum.WalkSpeed <= 0 and hum.MoveDirection.Magnitude == 0 then
+		return false
+	end
+	
+	return true
+end
+
+local function updateESP()
+	if not espEnabled then
+		clearHighlights()
+		return
+	end
+	
+	for _, obj in ipairs(workspace:GetDescendants()) do
+		if obj:IsA("Model") and obj ~= player.Character then
+			if isMonster(obj) then
+				if not obj:FindFirstChild("MonsterHighlight") then
+					local highlight = Instance.new("Highlight")
+					highlight.Name = "MonsterHighlight"
+					highlight.Adornee = obj
+					highlight.FillColor = Color3.fromRGB(255, 50, 50)
+					highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+					highlight.FillTransparency = 0.5
+					highlight.OutlineTransparency = 0
+					highlight.Parent = obj
+					table.insert(activeHighlights, highlight)
+				end
+			else
+				local existing = obj:FindFirstChild("MonsterHighlight")
+				if existing then
+					existing:Destroy()
+				end
+			end
+		end
+	end
+end
+
+espBtn.MouseButton1Click:Connect(function()
+	espEnabled = not espEnabled
+	if espEnabled then
+		espBtn.Text = "Monster ESP: ON"
+		espBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 80)
+	else
+		espBtn.Text = "Monster ESP: OFF"
+		espBtn.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+		clearHighlights()
+	end
+end)
+
+runService.Heartbeat:Connect(function()
+	if espEnabled then
+		updateESP()
+	end
+end)
+
+-- Logic: Remove Fog, Full Brightness (Brightens dark rooms), and Fog Triggers
+local fogEnabled = false
+local originalShadows = lighting.GlobalShadows
+local originalFogEnd = lighting.FogEnd
+local originalFogStart = lighting.FogStart
+local originalBrightness = lighting.Brightness
+local originalAmbient = lighting.Ambient
+local originalOutdoorAmbient = lighting.OutdoorAmbient
+local removedTriggers = {}
+local removedAtmosphere = nil
+local removedPostEffects = {}
+
+fogBtn.MouseButton1Click:Connect(function()
+	fogEnabled = not fogEnabled
+	if fogEnabled then
+		fogBtn.Text = "Remove Fog: ON"
+		fogBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 80)
+		
+		-- Save current settings
+		originalShadows = lighting.GlobalShadows
+		originalFogEnd = lighting.FogEnd
+		originalFogStart = lighting.FogStart
+		originalBrightness = lighting.Brightness
+		originalAmbient = lighting.Ambient
+		originalOutdoorAmbient = lighting.OutdoorAmbient
+		
+		-- Make dark rooms completely bright & clear
+		lighting.GlobalShadows = false
+		lighting.Brightness = 3
+		lighting.Ambient = Color3.fromRGB(255, 255, 255)
+		lighting.OutdoorAmbient = Color3.fromRGB(255, 255, 255)
+		lighting.FogEnd = 100000
+		lighting.FogStart = 0
+		
+		-- Remove atmosphere
+		local atmosphere = lighting:FindFirstChildOfClass("Atmosphere")
+		if atmosphere then
+			removedAtmosphere = atmosphere
+			atmosphere.Parent = nil
+		end
+		
+		-- Remove dark post-effects (like ColorCorrection, Bloom, DepthOfField making things dark)
+		removedPostEffects = {}
+		for _, child in ipairs(lighting:GetChildren()) do
+			if child:IsA("PostEffect") then
+				table.insert(removedPostEffects, {item = child, parent = child.Parent})
+				child.Parent = nil
+			end
+		end
+		
+		-- Remove/Disable fog/darkness trigger parts and scripts in workspace
+		removedTriggers = {}
+		for _, obj in ipairs(workspace:GetDescendants()) do
+			local name = obj.Name:lower()
+			if name:find("fog") or name:find("blind") or name:find("darkness") or name:find("hazard") or name:find("jumpparent") then
+				if obj:IsA("BasePart") then
+					table.insert(removedTriggers, {item = obj, parent = obj.Parent})
+					obj.Parent = nil
+				elseif obj:IsA("Script") or obj:IsA("LocalScript") then
+					table.insert(removedTriggers, {item = obj, parent = obj.Parent})
+					obj.Disabled = true
+				end
+			end
+		end
+	else
+		fogBtn.Text = "Remove Fog: OFF"
+		fogBtn.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+		
+		-- Restore all original lighting settings
+		lighting.GlobalShadows = originalShadows
+		lighting.Brightness = originalBrightness
+		lighting.Ambient = originalAmbient
+		lighting.OutdoorAmbient = originalOutdoorAmbient
+		lighting.FogEnd = originalFogEnd
+		lighting.FogStart = originalFogStart
+		
+		if removedAtmosphere then
+			removedAtmosphere.Parent = lighting
+			removedAtmosphere = nil
+		end
+		
+		for _, data in ipairs(removedPostEffects) do
+			if data.item and data.parent then
+				data.item.Parent = data.parent
+			end
+		end
+		removedPostEffects = {}
+		
+		-- Bring back fog triggers/parts
+		for _, data in ipairs(removedTriggers) do
+			if data.item and data.parent then
+				if data.item:IsA("BasePart") then
+					data.item.Parent = data.parent
+				elseif data.item:IsA("Script") or data.item:IsA("LocalScript") then
+					data.item.Disabled = false
+				end
+			end
+		end
+		removedTriggers = {}
+	end
+end)
+
+player.CharacterAdded:Connect(function(char)
+	task.wait(0.3)
+	applyStats()
+end)
+
+-- Close Functionality (Restores scanned defaults & unloads GUI)
+closeBtn.MouseButton1Click:Connect(function()
+	local char = player.Character
+	if char then
+		local hum = char:FindFirstChildOfClass("Humanoid")
+		if hum then
+			hum.WalkSpeed = defaultSpeed
+			hum.JumpPower = defaultJump
+		end
+	end
+	clearHighlights()
+	screenGui:Destroy()
+end)
+
+-- Minimize Functionality (Hides content container and shrinks frame so title stays put at the top)
+local minimized = false
+local tweenInfo = TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+
+minimizeBtn.MouseButton1Click:Connect(function()
+	minimized = not minimized
+	if minimized then
+		minimizeBtn.Text = "+"
+		contentContainer.Visible = false
+		tweenService:Create(frame, tweenInfo, {Size = UDim2.new(0, 220, 0, 30)}):Play()
+	else
+		minimizeBtn.Text = "-"
+		contentContainer.Visible = true
+		tweenService:Create(frame, tweenInfo, {Size = UDim2.new(0, 220, 0, 338)}):Play()
+	end
+end)
+
+-- Robust Whole-GUI 1-Finger Dragging System
+local dragging = false
+local dragInput = nil
+local dragStart = nil
+local startPos = nil
+
+frame.InputBegan:Connect(function(input)
+	if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) and not dragging then
+		dragging = true
+		dragInput = input
+		dragStart = input.Position
+		startPos = frame.Position
+		
+		input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then
+				if input == dragInput then
+					dragging = false
+					dragInput = nil
+				end
+			end
+		end)
+	end
+end)
+
+userInputService.InputChanged:Connect(function(input)
+	if dragging and input == dragInput and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+		local delta = input.Position - dragStart
+		frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+	end
+end)
