@@ -55,7 +55,7 @@ local titleLabel = Instance.new("TextLabel")
 titleLabel.Size = UDim2.new(1, -60, 0, 30)
 titleLabel.Position = UDim2.new(0, 10, 0, 0)
 titleLabel.BackgroundTransparency = 1
-titleLabel.Text = "Speed & Jump Menu"
+titleLabel.Text = "Adam’s GUI"
 titleLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
 titleLabel.TextSize = 14
 titleLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -202,7 +202,7 @@ local btnCorner5 = Instance.new("UICorner")
 btnCorner5.CornerRadius = UDim.new(0, 6)
 btnCorner5.Parent = fogBtn
 
--- Made By Footer Label
+-- Made By Admmmo6 Label
 local creditLabel = Instance.new("TextLabel")
 creditLabel.Size = UDim2.new(0, 200, 0, 20)
 creditLabel.Position = UDim2.new(0.5, -100, 0, 260)
