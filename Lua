@@ -5,7 +5,6 @@ local tweenService = game:GetService("TweenService")
 local userInputService = game:GetService("UserInputService")
 local runService = game:GetService("RunService")
 local lighting = game:GetService("Lighting")
-local proximityPromptService = game:GetService("ProximityPromptService")
 
 -- Scans the game's actual starting speed/jump right away
 local defaultSpeed = 16
@@ -39,7 +38,7 @@ screenGui.Name = "SpeedJumpGui"
 screenGui.ResetOnSpawn = false
 screenGui.Parent = playerGui
 
--- Main Frame (Made taller to fit the new button)
+-- Main Frame
 local frame = Instance.new("Frame")
 frame.Size = UDim2.new(0, 220, 0, 380)
 frame.Position = UDim2.new(0.5, -110, 0.5, -190)
@@ -87,7 +86,7 @@ minimizeBtn.Font = Enum.Font.SourceSansBold
 minimizeBtn.ZIndex = 2
 minimizeBtn.Parent = frame
 
--- Content Container (Holds everything except the top bar)
+-- Content Container
 local contentContainer = Instance.new("Frame")
 contentContainer.Size = UDim2.new(1, 0, 0, 350)
 contentContainer.Position = UDim2.new(0, 0, 0, 30)
@@ -245,7 +244,7 @@ end
 
 applyBtn.MouseButton1Click:Connect(applyStats)
 
--- Logic: Reset stats to scanned defaults and update character values immediately
+-- Logic: Reset stats
 resetBtn.MouseButton1Click:Connect(function()
 	speedBox.Text = tostring(defaultSpeed)
 	jumpBox.Text = tostring(defaultJump)
@@ -259,7 +258,7 @@ resetBtn.MouseButton1Click:Connect(function()
 	end
 end)
 
--- Logic: Noclip (Safe on HumanoidRootPart)
+-- Logic: Noclip
 local noclipEnabled = false
 noclipBtn.MouseButton1Click:Connect(function()
 	noclipEnabled = not noclipEnabled
@@ -272,9 +271,7 @@ noclipBtn.MouseButton1Click:Connect(function()
 		local char = player.Character
 		if char then
 			local root = char:FindFirstChild("HumanoidRootPart")
-			if root then
-				root.CanCollide = true
-			end
+			if root then root.CanCollide = true end
 		end
 	end
 end)
@@ -284,35 +281,27 @@ runService.Stepped:Connect(function()
 		local char = player.Character
 		if char then
 			local root = char:FindFirstChild("HumanoidRootPart")
-			if root then
-				root.CanCollide = false
-			end
+			if root then root.CanCollide = false end
 		end
 	end
 end)
 
--- Logic: Strict Monster ESP (Filters out NPCs, Shop Keepers, Dummies, and Safe Entities)
+-- Logic: Monster ESP
 local espEnabled = false
 local activeHighlights = {}
 
 local function clearHighlights()
 	for _, highlight in pairs(activeHighlights) do
-		if highlight then
-			highlight:Destroy()
-		end
+		if highlight then highlight:Destroy() end
 	end
 	activeHighlights = {}
 end
 
 local function isMonster(model)
 	local name = model.Name:lower()
-	
-	-- Blacklist expanded to filter out mannequins, shirts, displays, and stands
 	local blacklist = {"shop", "merchant", "npc", "dummy", "train", "guide", "citizen", "seller", "dealer", "quest", "baker", "safe", "starter", "shirt", "display", "stand", "store"}
 	for _, term in ipairs(blacklist) do
-		if name:find(term) then
-			return false
-		end
+		if name:find(term) then return false end
 	end
 	
 	local hum = model:FindFirstChildOfClass("Humanoid")
@@ -321,10 +310,7 @@ local function isMonster(model)
 	if not hum or not rootPart then return false end
 	if players:GetPlayerFromCharacter(model) then return false end
 	if hum.Health <= 0 then return false end
-	
-	if hum.WalkSpeed <= 0 and hum.MoveDirection.Magnitude == 0 then
-		return false
-	end
+	if hum.WalkSpeed <= 0 and hum.MoveDirection.Magnitude == 0 then return false end
 	
 	return true
 end
@@ -351,9 +337,7 @@ local function updateESP()
 				end
 			else
 				local existing = obj:FindFirstChild("MonsterHighlight")
-				if existing then
-					existing:Destroy()
-				end
+				if existing then existing:Destroy() end
 			end
 		end
 	end
@@ -372,12 +356,10 @@ espBtn.MouseButton1Click:Connect(function()
 end)
 
 runService.Heartbeat:Connect(function()
-	if espEnabled then
-		updateESP()
-	end
+	if espEnabled then updateESP() end
 end)
 
--- Logic: Remove Fog, Full Brightness (Brightens dark rooms), and Fog Triggers
+-- Logic: Remove Fog
 local fogEnabled = false
 local originalShadows = lighting.GlobalShadows
 local originalFogEnd = lighting.FogEnd
@@ -395,7 +377,6 @@ fogBtn.MouseButton1Click:Connect(function()
 		fogBtn.Text = "Remove Fog: ON"
 		fogBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 80)
 		
-		-- Save current settings
 		originalShadows = lighting.GlobalShadows
 		originalFogEnd = lighting.FogEnd
 		originalFogStart = lighting.FogStart
@@ -403,7 +384,6 @@ fogBtn.MouseButton1Click:Connect(function()
 		originalAmbient = lighting.Ambient
 		originalOutdoorAmbient = lighting.OutdoorAmbient
 		
-		-- Make dark rooms completely bright & clear
 		lighting.GlobalShadows = false
 		lighting.Brightness = 3
 		lighting.Ambient = Color3.fromRGB(255, 255, 255)
@@ -411,14 +391,12 @@ fogBtn.MouseButton1Click:Connect(function()
 		lighting.FogEnd = 100000
 		lighting.FogStart = 0
 		
-		-- Remove atmosphere
 		local atmosphere = lighting:FindFirstChildOfClass("Atmosphere")
 		if atmosphere then
 			removedAtmosphere = atmosphere
 			atmosphere.Parent = nil
 		end
 		
-		-- Remove dark post-effects (like ColorCorrection, Bloom, DepthOfField making things dark)
 		removedPostEffects = {}
 		for _, child in ipairs(lighting:GetChildren()) do
 			if child:IsA("PostEffect") then
@@ -427,7 +405,6 @@ fogBtn.MouseButton1Click:Connect(function()
 			end
 		end
 		
-		-- Remove/Disable fog/darkness trigger parts and scripts in workspace
 		removedTriggers = {}
 		for _, obj in ipairs(workspace:GetDescendants()) do
 			local name = obj.Name:lower()
@@ -445,7 +422,6 @@ fogBtn.MouseButton1Click:Connect(function()
 		fogBtn.Text = "Remove Fog: OFF"
 		fogBtn.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
 		
-		-- Restore all original lighting settings
 		lighting.GlobalShadows = originalShadows
 		lighting.Brightness = originalBrightness
 		lighting.Ambient = originalAmbient
@@ -459,13 +435,10 @@ fogBtn.MouseButton1Click:Connect(function()
 		end
 		
 		for _, data in ipairs(removedPostEffects) do
-			if data.item and data.parent then
-				data.item.Parent = data.parent
-			end
+			if data.item and data.parent then data.item.Parent = data.parent end
 		end
 		removedPostEffects = {}
 		
-		-- Bring back fog triggers/parts
 		for _, data in ipairs(removedTriggers) do
 			if data.item and data.parent then
 				if data.item:IsA("BasePart") then
@@ -479,7 +452,7 @@ fogBtn.MouseButton1Click:Connect(function()
 	end
 end)
 
--- Logic: Instant Proximity Prompts (0 Hold Duration & 0 Cooldown)
+-- Logic: Instant Proximity Prompts (Updated to force Cooldown & HoldDuration to 0 game-wide)
 local instantPromptsEnabled = false
 local promptConnection = nil
 
@@ -496,14 +469,14 @@ promptBtn.MouseButton1Click:Connect(function()
 		promptBtn.Text = "Instant Prompts: ON"
 		promptBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 80)
 		
-		-- Make all current prompts instant
-		for _, obj in ipairs(workspace:GetDescendants()) do
+		for _, obj in ipairs(game:GetDescendants()) do
 			makePromptInstant(obj)
 		end
 		
-		-- Automatically handle newly spawned prompts
-		promptConnection = workspace.DescendantAdded:Connect(function(obj)
-			makePromptInstant(obj)
+		promptConnection = game.DescendantAdded:Connect(function(obj)
+			if instantPromptsEnabled then
+				makePromptInstant(obj)
+			end
 		end)
 	else
 		promptBtn.Text = "Instant Prompts: OFF"
@@ -520,7 +493,7 @@ player.CharacterAdded:Connect(function(char)
 	applyStats()
 end)
 
--- Close Functionality (Restores scanned defaults & unloads GUI)
+-- Close Functionality
 closeBtn.MouseButton1Click:Connect(function()
 	local char = player.Character
 	if char then
@@ -534,7 +507,7 @@ closeBtn.MouseButton1Click:Connect(function()
 	screenGui:Destroy()
 end)
 
--- Minimize Functionality (Hides content container and shrinks frame so title stays put at the top)
+-- Minimize Functionality
 local minimized = false
 local tweenInfo = TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 
@@ -551,7 +524,7 @@ minimizeBtn.MouseButton1Click:Connect(function()
 	end
 end)
 
--- Robust Whole-GUI 1-Finger Dragging System (Strict Movement Lock)
+-- Whole-GUI 1-Finger Dragging System
 local dragging = false
 local dragInput = nil
 local dragStart = nil
