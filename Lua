@@ -38,10 +38,10 @@ screenGui.Name = "SpeedJumpGui"
 screenGui.ResetOnSpawn = false
 screenGui.Parent = playerGui
 
--- Main Frame
+-- Main Frame (Adjusted height back down)
 local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 220, 0, 380)
-frame.Position = UDim2.new(0.5, -110, 0.5, -190)
+frame.Size = UDim2.new(0, 220, 0, 338)
+frame.Position = UDim2.new(0.5, -110, 0.5, -169)
 frame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
 frame.ClipsDescendants = true
 frame.Parent = screenGui
@@ -88,7 +88,7 @@ minimizeBtn.Parent = frame
 
 -- Content Container
 local contentContainer = Instance.new("Frame")
-contentContainer.Size = UDim2.new(1, 0, 0, 350)
+contentContainer.Size = UDim2.new(1, 0, 0, 308)
 contentContainer.Position = UDim2.new(0, 0, 0, 30)
 contentContainer.BackgroundTransparency = 1
 contentContainer.Parent = frame
@@ -202,25 +202,10 @@ local btnCorner5 = Instance.new("UICorner")
 btnCorner5.CornerRadius = UDim.new(0, 6)
 btnCorner5.Parent = fogBtn
 
--- Instant Proximity Prompts Toggle Button
-local promptBtn = Instance.new("TextButton")
-promptBtn.Size = UDim2.new(0, 200, 0, 35)
-promptBtn.Position = UDim2.new(0.5, -100, 0, 258)
-promptBtn.Text = "Instant Prompts: OFF"
-promptBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-promptBtn.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
-promptBtn.TextSize = 14
-promptBtn.Font = Enum.Font.SourceSansBold
-promptBtn.Parent = contentContainer
-
-local btnCorner6 = Instance.new("UICorner")
-btnCorner6.CornerRadius = UDim.new(0, 6)
-btnCorner6.Parent = promptBtn
-
 -- Made By Admmmo6 Label
 local creditLabel = Instance.new("TextLabel")
 creditLabel.Size = UDim2.new(0, 200, 0, 20)
-creditLabel.Position = UDim2.new(0.5, -100, 0, 300)
+creditLabel.Position = UDim2.new(0.5, -100, 0, 260)
 creditLabel.BackgroundTransparency = 1
 creditLabel.Text = "Made by: Admmmo6"
 creditLabel.TextColor3 = Color3.fromRGB(140, 140, 140)
@@ -452,42 +437,6 @@ fogBtn.MouseButton1Click:Connect(function()
 	end
 end)
 
--- Logic: Instant Proximity Prompts (Updated to force Cooldown & HoldDuration to 0 game-wide)
-local instantPromptsEnabled = false
-local promptConnection = nil
-
-local function makePromptInstant(prompt)
-	if prompt:IsA("ProximityPrompt") then
-		prompt.HoldDuration = 0
-		prompt.Cooldown = 0
-	end
-end
-
-promptBtn.MouseButton1Click:Connect(function()
-	instantPromptsEnabled = not instantPromptsEnabled
-	if instantPromptsEnabled then
-		promptBtn.Text = "Instant Prompts: ON"
-		promptBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 80)
-		
-		for _, obj in ipairs(game:GetDescendants()) do
-			makePromptInstant(obj)
-		end
-		
-		promptConnection = game.DescendantAdded:Connect(function(obj)
-			if instantPromptsEnabled then
-				makePromptInstant(obj)
-			end
-		end)
-	else
-		promptBtn.Text = "Instant Prompts: OFF"
-		promptBtn.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
-		if promptConnection then
-			promptConnection:Disconnect()
-			promptConnection = nil
-		end
-	end
-end)
-
 player.CharacterAdded:Connect(function(char)
 	task.wait(0.3)
 	applyStats()
@@ -520,7 +469,7 @@ minimizeBtn.MouseButton1Click:Connect(function()
 	else
 		minimizeBtn.Text = "-"
 		contentContainer.Visible = true
-		tweenService:Create(frame, tweenInfo, {Size = UDim2.new(0, 220, 0, 380)}):Play()
+		tweenService:Create(frame, tweenInfo, {Size = UDim2.new(0, 220, 0, 338)}):Play()
 	end
 end)
 
