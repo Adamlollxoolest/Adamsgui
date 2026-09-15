@@ -307,7 +307,8 @@ end
 local function isMonster(model)
 	local name = model.Name:lower()
 	
-	local blacklist = {"shop", "merchant", "npc", "dummy", "train", "guide", "citizen", "seller", "dealer", "quest", "baker", "safe", "starter"}
+	-- Blacklist expanded to filter out mannequins, shirts, displays, and stands
+	local blacklist = {"shop", "merchant", "npc", "dummy", "train", "guide", "citizen", "seller", "dealer", "quest", "baker", "safe", "starter", "shirt", "display", "stand", "store"}
 	for _, term in ipairs(blacklist) do
 		if name:find(term) then
 			return false
