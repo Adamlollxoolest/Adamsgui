@@ -4,6 +4,7 @@ local playerGui = player:WaitForChild("PlayerGui")
 local tweenService = game:GetService("TweenService")
 local userInputService = game:GetService("UserInputService")
 local runService = game:GetService("RunService")
+local lighting = game:GetService("Lighting")
 
 -- Scans the game's actual starting speed/jump right away
 local defaultSpeed = 16
@@ -37,10 +38,10 @@ screenGui.Name = "SpeedJumpGui"
 screenGui.ResetOnSpawn = false
 screenGui.Parent = playerGui
 
--- Main Frame
+-- Main Frame (Made longer to fit the new button)
 local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 220, 0, 295)
-frame.Position = UDim2.new(0.5, -110, 0.5, -147.5)
+frame.Size = UDim2.new(0, 220, 0, 338)
+frame.Position = UDim2.new(0.5, -110, 0.5, -169)
 frame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
 frame.ClipsDescendants = true
 frame.Parent = screenGui
@@ -54,7 +55,7 @@ local titleLabel = Instance.new("TextLabel")
 titleLabel.Size = UDim2.new(1, -60, 0, 30)
 titleLabel.Position = UDim2.new(0, 10, 0, 0)
 titleLabel.BackgroundTransparency = 1
-titleLabel.Text = "Adam’s GUI"
+titleLabel.Text = "Speed & Jump Menu"
 titleLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
 titleLabel.TextSize = 14
 titleLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -85,9 +86,9 @@ minimizeBtn.Font = Enum.Font.SourceSansBold
 minimizeBtn.ZIndex = 2
 minimizeBtn.Parent = frame
 
--- Content Container
+-- Content Container (Holds everything except the top bar)
 local contentContainer = Instance.new("Frame")
-contentContainer.Size = UDim2.new(1, 0, 0, 265)
+contentContainer.Size = UDim2.new(1, 0, 0, 308)
 contentContainer.Position = UDim2.new(0, 0, 0, 30)
 contentContainer.BackgroundTransparency = 1
 contentContainer.Parent = frame
@@ -171,7 +172,7 @@ local btnCorner3 = Instance.new("UICorner")
 btnCorner3.CornerRadius = UDim.new(0, 6)
 btnCorner3.Parent = noclipBtn
 
--- ESP Toggle Button
+-- ESP / Highlight Monsters Toggle Button
 local espBtn = Instance.new("TextButton")
 espBtn.Size = UDim2.new(0, 200, 0, 35)
 espBtn.Position = UDim2.new(0.5, -100, 0, 174)
@@ -186,10 +187,25 @@ local btnCorner4 = Instance.new("UICorner")
 btnCorner4.CornerRadius = UDim.new(0, 6)
 btnCorner4.Parent = espBtn
 
+-- Remove Fog Toggle Button
+local fogBtn = Instance.new("TextButton")
+fogBtn.Size = UDim2.new(0, 200, 0, 35)
+fogBtn.Position = UDim2.new(0.5, -100, 0, 216)
+fogBtn.Text = "Remove Fog: OFF"
+fogBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+fogBtn.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+fogBtn.TextSize = 14
+fogBtn.Font = Enum.Font.SourceSansBold
+fogBtn.Parent = contentContainer
+
+local btnCorner5 = Instance.new("UICorner")
+btnCorner5.CornerRadius = UDim.new(0, 6)
+btnCorner5.Parent = fogBtn
+
 -- Made By Footer Label
 local creditLabel = Instance.new("TextLabel")
 creditLabel.Size = UDim2.new(0, 200, 0, 20)
-creditLabel.Position = UDim2.new(0.5, -100, 0, 217)
+creditLabel.Position = UDim2.new(0.5, -100, 0, 260)
 creditLabel.BackgroundTransparency = 1
 creditLabel.Text = "Made by: Admmmo6"
 creditLabel.TextColor3 = Color3.fromRGB(140, 140, 140)
@@ -213,7 +229,7 @@ end
 
 applyBtn.MouseButton1Click:Connect(applyStats)
 
--- Logic: Reset stats
+-- Logic: Reset stats to scanned defaults and update character values immediately
 resetBtn.MouseButton1Click:Connect(function()
 	speedBox.Text = tostring(defaultSpeed)
 	jumpBox.Text = tostring(defaultJump)
@@ -227,7 +243,7 @@ resetBtn.MouseButton1Click:Connect(function()
 	end
 end)
 
--- Logic: Noclip
+-- Logic: Noclip (Safe on HumanoidRootPart)
 local noclipEnabled = false
 noclipBtn.MouseButton1Click:Connect(function()
 	noclipEnabled = not noclipEnabled
@@ -259,43 +275,39 @@ runService.Stepped:Connect(function()
 	end
 end)
 
--- Logic: Smart Monster ESP (Ignores shop dummies, stands, and non-moving entities)
+-- Logic: Strict Monster ESP (Filters out NPCs, Shop Keepers, Dummies, and Safe Entities)
 local espEnabled = false
 local activeHighlights = {}
 
 local function clearHighlights()
-	local index = 1
-	while index <= #activeHighlights do
-		local highlight = activeHighlights[index]
+	for _, highlight in pairs(activeHighlights) do
 		if highlight then
 			highlight:Destroy()
 		end
-		index = index + 1
 	end
 	activeHighlights = {}
 end
 
 local function isMonster(model)
 	local name = model.Name:lower()
-	local parentName = model.Parent and model.Parent.Name:lower() or ""
 	
-	-- Blacklist names that indicate shop displays, dummies, or clothing stands
-	local blacklist = {"shop", "merchant", "npc", "dummy", "train", "guide", "citizen", "seller", "dealer", "quest", "baker", "starter", "buy", "item", "weapon", "chest", "crate", "display", "mannequin", "shirt", "stand"}
+	local blacklist = {"shop", "merchant", "npc", "dummy", "train", "guide", "citizen", "seller", "dealer", "quest", "baker", "safe", "starter"}
 	for _, term in ipairs(blacklist) do
-		if name:find(term) or parentName:find(term) then
+		if name:find(term) then
 			return false
 		end
 	end
 	
 	local hum = model:FindFirstChildOfClass("Humanoid")
-	local rootPart = model:FindFirstChild("HumanoidRootPart") or model.PrimaryPart or model:FindFirstChild("Torso")
+	local rootPart = model:FindFirstChild("HumanoidRootPart") or model.PrimaryPart or model:FindFirstChild("Torso") or model:FindFirstChild("UpperTorso")
 	
 	if not hum or not rootPart then return false end
 	if players:GetPlayerFromCharacter(model) then return false end
 	if hum.Health <= 0 then return false end
 	
-	-- Ignore anchored models (dummies/shop owners usually don't move or are anchored)
-	if rootPart.Anchored then return false end
+	if hum.WalkSpeed <= 0 and hum.MoveDirection.Magnitude == 0 then
+		return false
+	end
 	
 	return true
 end
@@ -306,10 +318,7 @@ local function updateESP()
 		return
 	end
 	
-	local descendants = workspace:GetDescendants()
-	local dIndex = 1
-	while dIndex <= #descendants do
-		local obj = descendants[dIndex]
+	for _, obj in ipairs(workspace:GetDescendants()) do
 		if obj:IsA("Model") and obj ~= player.Character then
 			if isMonster(obj) then
 				if not obj:FindFirstChild("MonsterHighlight") then
@@ -330,7 +339,6 @@ local function updateESP()
 				end
 			end
 		end
-		dIndex = dIndex + 1
 	end
 end
 
@@ -352,12 +360,114 @@ runService.Heartbeat:Connect(function()
 	end
 end)
 
+-- Logic: Remove Fog, Full Brightness (Brightens dark rooms), and Fog Triggers
+local fogEnabled = false
+local originalShadows = lighting.GlobalShadows
+local originalFogEnd = lighting.FogEnd
+local originalFogStart = lighting.FogStart
+local originalBrightness = lighting.Brightness
+local originalAmbient = lighting.Ambient
+local originalOutdoorAmbient = lighting.OutdoorAmbient
+local removedTriggers = {}
+local removedAtmosphere = nil
+local removedPostEffects = {}
+
+fogBtn.MouseButton1Click:Connect(function()
+	fogEnabled = not fogEnabled
+	if fogEnabled then
+		fogBtn.Text = "Remove Fog: ON"
+		fogBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 80)
+		
+		-- Save current settings
+		originalShadows = lighting.GlobalShadows
+		originalFogEnd = lighting.FogEnd
+		originalFogStart = lighting.FogStart
+		originalBrightness = lighting.Brightness
+		originalAmbient = lighting.Ambient
+		originalOutdoorAmbient = lighting.OutdoorAmbient
+		
+		-- Make dark rooms completely bright & clear
+		lighting.GlobalShadows = false
+		lighting.Brightness = 3
+		lighting.Ambient = Color3.fromRGB(255, 255, 255)
+		lighting.OutdoorAmbient = Color3.fromRGB(255, 255, 255)
+		lighting.FogEnd = 100000
+		lighting.FogStart = 0
+		
+		-- Remove atmosphere
+		local atmosphere = lighting:FindFirstChildOfClass("Atmosphere")
+		if atmosphere then
+			removedAtmosphere = atmosphere
+			atmosphere.Parent = nil
+		end
+		
+		-- Remove dark post-effects (like ColorCorrection, Bloom, DepthOfField making things dark)
+		removedPostEffects = {}
+		for _, child in ipairs(lighting:GetChildren()) do
+			if child:IsA("PostEffect") then
+				table.insert(removedPostEffects, {item = child, parent = child.Parent})
+				child.Parent = nil
+			end
+		end
+		
+		-- Remove/Disable fog/darkness trigger parts and scripts in workspace
+		removedTriggers = {}
+		for _, obj in ipairs(workspace:GetDescendants()) do
+			local name = obj.Name:lower()
+			if name:find("fog") or name:find("blind") or name:find("darkness") or name:find("hazard") or name:find("jumpparent") then
+				if obj:IsA("BasePart") then
+					table.insert(removedTriggers, {item = obj, parent = obj.Parent})
+					obj.Parent = nil
+				elseif obj:IsA("Script") or obj:IsA("LocalScript") then
+					table.insert(removedTriggers, {item = obj, parent = obj.Parent})
+					obj.Disabled = true
+				end
+			end
+		end
+	else
+		fogBtn.Text = "Remove Fog: OFF"
+		fogBtn.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+		
+		-- Restore all original lighting settings
+		lighting.GlobalShadows = originalShadows
+		lighting.Brightness = originalBrightness
+		lighting.Ambient = originalAmbient
+		lighting.OutdoorAmbient = originalOutdoorAmbient
+		lighting.FogEnd = originalFogEnd
+		lighting.FogStart = originalFogStart
+		
+		if removedAtmosphere then
+			removedAtmosphere.Parent = lighting
+			removedAtmosphere = nil
+		end
+		
+		for _, data in ipairs(removedPostEffects) do
+			if data.item and data.parent then
+				data.item.Parent = data.parent
+			end
+		end
+		removedPostEffects = {}
+		
+		-- Bring back fog triggers/parts
+		for _, data in ipairs(removedTriggers) do
+			if data.item and data.parent then
+				if data.item:IsA("BasePart") then
+					data.item.Parent = data.parent
+				elseif data.item:IsA("Script") or data.item:IsA("LocalScript") then
+					data.item.Disabled = false
+				end
+			end
+		end
+		removedTriggers = {}
+	end
+end)
+
 player.CharacterAdded:Connect(function(char)
 	task.wait(0.3)
 	applyStats()
 end)
 
--- Close Functionality
+-- Close Functionality (Restores scanned defaults & unloads GUI)
 closeBtn.MouseButton1Click:Connect(function()
 	local char = player.Character
 	if char then
@@ -371,7 +481,7 @@ closeBtn.MouseButton1Click:Connect(function()
 	screenGui:Destroy()
 end)
 
--- Minimize Functionality
+-- Minimize Functionality (Hides content container and shrinks frame so title stays put at the top)
 local minimized = false
 local tweenInfo = TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 
@@ -384,30 +494,17 @@ minimizeBtn.MouseButton1Click:Connect(function()
 	else
 		minimizeBtn.Text = "-"
 		contentContainer.Visible = true
-		tweenService:Create(frame, tweenInfo, {Size = UDim2.new(0, 220, 0, 295)}):Play()
+		tweenService:Create(frame, tweenInfo, {Size = UDim2.new(0, 220, 0, 338)}):Play()
 	end
 end)
 
--- Movement Check
-local function isPlayerWalking()
-	local char = player.Character
-	if char then
-		local hum = char:FindFirstChildOfClass("Humanoid")
-		if hum and hum.MoveDirection.Magnitude > 0 then
-			return true
-		end
-	end
-	return false
-end
-
--- Universal Movement-Lock Dragging System
+-- Robust Whole-GUI 1-Finger Dragging System
 local dragging = false
 local dragInput = nil
 local dragStart = nil
 local startPos = nil
 
 frame.InputBegan:Connect(function(input)
-	if isPlayerWalking() then return end
 	if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) and not dragging then
 		dragging = true
 		dragInput = input
@@ -426,12 +523,6 @@ frame.InputBegan:Connect(function(input)
 end)
 
 userInputService.InputChanged:Connect(function(input)
-	if isPlayerWalking() then
-		dragging = false
-		dragInput = nil
-		return
-	end
-	
 	if dragging and input == dragInput and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
 		local delta = input.Position - dragStart
 		frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
