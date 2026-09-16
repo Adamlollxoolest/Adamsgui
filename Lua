@@ -6,7 +6,6 @@ local userInputService = game:GetService("UserInputService")
 local runService = game:GetService("RunService")
 local lighting = game:GetService("Lighting")
 
--- Scans the game's actual starting speed/jump right away
 local defaultSpeed = 16
 local defaultJump = 50
 
@@ -27,18 +26,15 @@ player.CharacterAdded:Connect(function(char)
 	cacheDefaults()
 end)
 
--- Remove old GUI if it exists
 if playerGui:FindFirstChild("SpeedJumpGui") then
 	playerGui.SpeedJumpGui:Destroy()
 end
 
--- Main ScreenGui
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "SpeedJumpGui"
 screenGui.ResetOnSpawn = false
 screenGui.Parent = playerGui
 
--- Main Frame (Adjusted height back down)
 local frame = Instance.new("Frame")
 frame.Size = UDim2.new(0, 220, 0, 338)
 frame.Position = UDim2.new(0.5, -110, 0.5, -169)
@@ -50,9 +46,8 @@ local corner = Instance.new("UICorner")
 corner.CornerRadius = UDim.new(0, 8)
 corner.Parent = frame
 
--- Title Label
 local titleLabel = Instance.new("TextLabel")
-titleLabel.Size = UDim2.new(1, -60, 0, 30)
+titleLabel.Size = UDim2.new(0, 80, 0, 30)
 titleLabel.Position = UDim2.new(0, 10, 0, 0)
 titleLabel.BackgroundTransparency = 1
 titleLabel.Text = "Adam’s GUI"
@@ -62,7 +57,6 @@ titleLabel.TextXAlignment = Enum.TextXAlignment.Left
 titleLabel.Font = Enum.Font.SourceSansBold
 titleLabel.Parent = frame
 
--- Close / X Button
 local closeBtn = Instance.new("TextButton")
 closeBtn.Size = UDim2.new(0, 30, 0, 30)
 closeBtn.Position = UDim2.new(1, -30, 0, 0)
@@ -74,7 +68,6 @@ closeBtn.Font = Enum.Font.SourceSansBold
 closeBtn.ZIndex = 2
 closeBtn.Parent = frame
 
--- Minimize / Minus Button
 local minimizeBtn = Instance.new("TextButton")
 minimizeBtn.Size = UDim2.new(0, 30, 0, 30)
 minimizeBtn.Position = UDim2.new(1, -60, 0, 0)
@@ -86,14 +79,27 @@ minimizeBtn.Font = Enum.Font.SourceSansBold
 minimizeBtn.ZIndex = 2
 minimizeBtn.Parent = frame
 
--- Content Container
+local lockBtn = Instance.new("TextButton")
+lockBtn.Size = UDim2.new(0, 68, 0, 20)
+lockBtn.Position = UDim2.new(0, 91, 0, 5)
+lockBtn.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+lockBtn.Text = "Lock: OFF"
+lockBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+lockBtn.TextSize = 10
+lockBtn.Font = Enum.Font.SourceSansBold
+lockBtn.ZIndex = 2
+lockBtn.Parent = frame
+
+local lockCorner = Instance.new("UICorner")
+lockCorner.CornerRadius = UDim.new(0, 4)
+lockCorner.Parent = lockBtn
+
 local contentContainer = Instance.new("Frame")
 contentContainer.Size = UDim2.new(1, 0, 0, 308)
 contentContainer.Position = UDim2.new(0, 0, 0, 30)
 contentContainer.BackgroundTransparency = 1
 contentContainer.Parent = frame
 
--- Speed TextBox
 local speedBox = Instance.new("TextBox")
 speedBox.Size = UDim2.new(0, 200, 0, 35)
 speedBox.Position = UDim2.new(0.5, -100, 0, 5)
@@ -110,7 +116,6 @@ local speedCorner = Instance.new("UICorner")
 speedCorner.CornerRadius = UDim.new(0, 6)
 speedCorner.Parent = speedBox
 
--- Jump Power TextBox
 local jumpBox = Instance.new("TextBox")
 jumpBox.Size = UDim2.new(0, 200, 0, 35)
 jumpBox.Position = UDim2.new(0.5, -100, 0, 48)
@@ -127,7 +132,6 @@ local jumpCorner = Instance.new("UICorner")
 jumpCorner.CornerRadius = UDim.new(0, 6)
 jumpCorner.Parent = jumpBox
 
--- Apply Button
 local applyBtn = Instance.new("TextButton")
 applyBtn.Size = UDim2.new(0, 95, 0, 35)
 applyBtn.Position = UDim2.new(0.5, -100, 0, 90)
@@ -142,7 +146,6 @@ local btnCorner1 = Instance.new("UICorner")
 btnCorner1.CornerRadius = UDim.new(0, 6)
 btnCorner1.Parent = applyBtn
 
--- Reset Stats Button
 local resetBtn = Instance.new("TextButton")
 resetBtn.Size = UDim2.new(0, 95, 0, 35)
 resetBtn.Position = UDim2.new(0.5, 5, 0, 90)
@@ -157,7 +160,6 @@ local btnCorner2 = Instance.new("UICorner")
 btnCorner2.CornerRadius = UDim.new(0, 6)
 btnCorner2.Parent = resetBtn
 
--- Noclip Toggle Button
 local noclipBtn = Instance.new("TextButton")
 noclipBtn.Size = UDim2.new(0, 200, 0, 35)
 noclipBtn.Position = UDim2.new(0.5, -100, 0, 132)
@@ -172,7 +174,6 @@ local btnCorner3 = Instance.new("UICorner")
 btnCorner3.CornerRadius = UDim.new(0, 6)
 btnCorner3.Parent = noclipBtn
 
--- ESP / Highlight Monsters Toggle Button
 local espBtn = Instance.new("TextButton")
 espBtn.Size = UDim2.new(0, 200, 0, 35)
 espBtn.Position = UDim2.new(0.5, -100, 0, 174)
@@ -187,7 +188,6 @@ local btnCorner4 = Instance.new("UICorner")
 btnCorner4.CornerRadius = UDim.new(0, 6)
 btnCorner4.Parent = espBtn
 
--- Remove Fog Toggle Button
 local fogBtn = Instance.new("TextButton")
 fogBtn.Size = UDim2.new(0, 200, 0, 35)
 fogBtn.Position = UDim2.new(0.5, -100, 0, 216)
@@ -202,7 +202,6 @@ local btnCorner5 = Instance.new("UICorner")
 btnCorner5.CornerRadius = UDim.new(0, 6)
 btnCorner5.Parent = fogBtn
 
--- Made By Admmmo6 Label
 local creditLabel = Instance.new("TextLabel")
 creditLabel.Size = UDim2.new(0, 200, 0, 20)
 creditLabel.Position = UDim2.new(0.5, -100, 0, 260)
@@ -213,7 +212,80 @@ creditLabel.TextSize = 12
 creditLabel.Font = Enum.Font.SourceSansItalic
 creditLabel.Parent = contentContainer
 
--- Logic: Apply stats
+local noclipEnabled = false
+local espEnabled = false
+local fogEnabled = false
+local guiLocked = false
+local activePressedButton = nil
+
+local function getButtonBaseColor(btn)
+	if btn == noclipBtn then return noclipEnabled and Color3.fromRGB(0, 170, 80) or Color3.fromRGB(70, 70, 70)
+	elseif btn == espBtn then return espEnabled and Color3.fromRGB(0, 170, 80) or Color3.fromRGB(70, 70, 70)
+	elseif btn == fogBtn then return fogEnabled and Color3.fromRGB(0, 170, 80) or Color3.fromRGB(70, 70, 70)
+	elseif btn == lockBtn then return guiLocked and Color3.fromRGB(220, 180, 0) or Color3.fromRGB(70, 70, 70)
+	elseif btn == applyBtn then return Color3.fromRGB(0, 150, 255)
+	elseif btn == resetBtn then return Color3.fromRGB(180, 50, 50)
+	end
+	return Color3.fromRGB(70, 70, 70)
+end
+
+local function setupShrinkEffect(button)
+	local origSize = button.Size
+	local origPos = button.Position
+	
+	local shrinkSize = UDim2.new(origSize.X.Scale, origSize.X.Offset - 4, origSize.Y.Scale, origSize.Y.Offset - 3)
+	local shrinkPos = UDim2.new(origPos.X.Scale, origPos.X.Offset + 2, origPos.Y.Scale, origPos.Y.Offset + 1.5)
+	
+	button.MouseEnter:Connect(function()
+		if activePressedButton and activePressedButton ~= button then
+			local prevBase = getButtonBaseColor(activePressedButton)
+			tweenService:Create(activePressedButton, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundColor3 = prevBase}):Play()
+		end
+		
+		activePressedButton = button
+		tweenService:Create(button, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+			Size = shrinkSize,
+			Position = shrinkPos,
+			BackgroundColor3 = button.BackgroundColor3:Lerp(Color3.fromRGB(255, 255, 255), 0.35)
+		}):Play()
+	end)
+	
+	button.MouseLeave:Connect(function()
+		local baseCol = getButtonBaseColor(button)
+		tweenService:Create(button, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+			Size = origSize,
+			Position = origPos,
+			BackgroundColor3 = baseCol
+		}):Play()
+	end)
+	
+	button.MouseButton1Down:Connect(function()
+		activePressedButton = button
+		tweenService:Create(button, TweenInfo.new(0.08, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+			Size = shrinkSize,
+			Position = shrinkPos,
+			BackgroundColor3 = button.BackgroundColor3:Lerp(Color3.fromRGB(255, 255, 255), 0.45)
+		}):Play()
+	end)
+end
+
+setupShrinkEffect(noclipBtn)
+setupShrinkEffect(espBtn)
+setupShrinkEffect(fogBtn)
+setupShrinkEffect(lockBtn)
+setupShrinkEffect(applyBtn)
+setupShrinkEffect(resetBtn)
+
+userInputService.InputEnded:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		if activePressedButton then
+			local baseCol = getButtonBaseColor(activePressedButton)
+			tweenService:Create(activePressedButton, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundColor3 = baseCol}):Play()
+			activePressedButton = nil
+		end
+	end
+end)
+
 local function applyStats()
 	local char = player.Character
 	if char then
@@ -229,7 +301,6 @@ end
 
 applyBtn.MouseButton1Click:Connect(applyStats)
 
--- Logic: Reset stats
 resetBtn.MouseButton1Click:Connect(function()
 	speedBox.Text = tostring(defaultSpeed)
 	jumpBox.Text = tostring(defaultJump)
@@ -243,16 +314,15 @@ resetBtn.MouseButton1Click:Connect(function()
 	end
 end)
 
--- Logic: Noclip
-local noclipEnabled = false
 noclipBtn.MouseButton1Click:Connect(function()
 	noclipEnabled = not noclipEnabled
+	local targetColor = noclipEnabled and Color3.fromRGB(0, 170, 80) or Color3.fromRGB(70, 70, 70)
+	tweenService:Create(noclipBtn, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundColor3 = targetColor}):Play()
+	
 	if noclipEnabled then
 		noclipBtn.Text = "Noclip: ON"
-		noclipBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 80)
 	else
 		noclipBtn.Text = "Noclip: OFF"
-		noclipBtn.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
 		local char = player.Character
 		if char then
 			local root = char:FindFirstChild("HumanoidRootPart")
@@ -271,8 +341,6 @@ runService.Stepped:Connect(function()
 	end
 end)
 
--- Logic: Monster ESP
-local espEnabled = false
 local activeHighlights = {}
 
 local function clearHighlights()
@@ -330,12 +398,13 @@ end
 
 espBtn.MouseButton1Click:Connect(function()
 	espEnabled = not espEnabled
+	local targetColor = espEnabled and Color3.fromRGB(0, 170, 80) or Color3.fromRGB(70, 70, 70)
+	tweenService:Create(espBtn, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundColor3 = targetColor}):Play()
+	
 	if espEnabled then
 		espBtn.Text = "Monster ESP: ON"
-		espBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 80)
 	else
 		espBtn.Text = "Monster ESP: OFF"
-		espBtn.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
 		clearHighlights()
 	end
 end)
@@ -344,8 +413,6 @@ runService.Heartbeat:Connect(function()
 	if espEnabled then updateESP() end
 end)
 
--- Logic: Remove Fog
-local fogEnabled = false
 local originalShadows = lighting.GlobalShadows
 local originalFogEnd = lighting.FogEnd
 local originalFogStart = lighting.FogStart
@@ -358,9 +425,11 @@ local removedPostEffects = {}
 
 fogBtn.MouseButton1Click:Connect(function()
 	fogEnabled = not fogEnabled
+	local targetColor = fogEnabled and Color3.fromRGB(0, 170, 80) or Color3.fromRGB(70, 70, 70)
+	tweenService:Create(fogBtn, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundColor3 = targetColor}):Play()
+	
 	if fogEnabled then
 		fogBtn.Text = "Remove Fog: ON"
-		fogBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 80)
 		
 		originalShadows = lighting.GlobalShadows
 		originalFogEnd = lighting.FogEnd
@@ -405,7 +474,6 @@ fogBtn.MouseButton1Click:Connect(function()
 		end
 	else
 		fogBtn.Text = "Remove Fog: OFF"
-		fogBtn.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
 		
 		lighting.GlobalShadows = originalShadows
 		lighting.Brightness = originalBrightness
@@ -442,7 +510,6 @@ player.CharacterAdded:Connect(function(char)
 	applyStats()
 end)
 
--- Close Functionality
 closeBtn.MouseButton1Click:Connect(function()
 	local char = player.Character
 	if char then
@@ -456,7 +523,6 @@ closeBtn.MouseButton1Click:Connect(function()
 	screenGui:Destroy()
 end)
 
--- Minimize Functionality
 local minimized = false
 local tweenInfo = TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 
@@ -473,54 +539,45 @@ minimizeBtn.MouseButton1Click:Connect(function()
 	end
 end)
 
--- Whole-GUI 1-Finger Dragging System
+lockBtn.MouseButton1Click:Connect(function()
+	guiLocked = not guiLocked
+	local targetColor = guiLocked and Color3.fromRGB(220, 180, 0) or Color3.fromRGB(70, 70, 70)
+	tweenService:Create(lockBtn, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundColor3 = targetColor}):Play()
+	
+	if guiLocked then
+		lockBtn.Text = "Lock: ON"
+	else
+		lockBtn.Text = "Lock: OFF"
+	end
+end)
+
 local dragging = false
 local dragInput = nil
 local dragStart = nil
 local startPos = nil
 
-local function isPlayerMoving()
-	local char = player.Character
-	if not char then return false end
-	local hum = char:FindFirstChildOfClass("Humanoid")
-	local root = char:FindFirstChild("HumanoidRootPart")
-	
-	if hum and root then
-		if hum.MoveDirection.Magnitude > 0.05 or root.AssemblyLinearVelocity.Magnitude > 1.5 then
-			return true
-		end
-	end
-	return false
-end
-
 frame.InputBegan:Connect(function(input)
-	if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) and not dragging then
-		if not isPlayerMoving() then
-			dragging = true
-			dragInput = input
-			dragStart = input.Position
-			startPos = frame.Position
-			
-			input.Changed:Connect(function()
-				if input.UserInputState == Enum.UserInputState.End then
-					if input == dragInput then
-						dragging = false
-						dragInput = nil
-					end
+	if guiLocked then return end
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		dragging = true
+		dragInput = input
+		dragStart = input.Position
+		startPos = frame.Position
+		
+		input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then
+				if input == dragInput then
+					dragging = false
+					dragInput = nil
 				end
-			end)
-		end
+			end
+		end)
 	end
 end)
 
 userInputService.InputChanged:Connect(function(input)
-	if dragging and input == dragInput and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-		if isPlayerMoving() then
-			dragging = false
-			dragInput = nil
-		else
-			local delta = input.Position - dragStart
-			frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-		end
+	if dragging and not guiLocked and input == dragInput and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+		local delta = input.Position - dragStart
+		frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
 	end
 end)
