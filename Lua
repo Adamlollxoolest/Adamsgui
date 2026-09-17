@@ -217,6 +217,7 @@ local espEnabled = false
 local fogEnabled = false
 local guiLocked = false
 local activePressedButton = nil
+local originalCollisions = {}
 
 local function getButtonBaseColor(btn)
 	if btn == noclipBtn then return noclipEnabled and Color3.fromRGB(0, 170, 80) or Color3.fromRGB(70, 70, 70)
@@ -319,15 +320,28 @@ noclipBtn.MouseButton1Click:Connect(function()
 	local targetColor = noclipEnabled and Color3.fromRGB(0, 170, 80) or Color3.fromRGB(70, 70, 70)
 	tweenService:Create(noclipBtn, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundColor3 = targetColor}):Play()
 	
+	local char = player.Character
 	if noclipEnabled then
 		noclipBtn.Text = "Noclip: ON"
+		originalCollisions = {}
+		if char then
+			for _, part in ipairs(char:GetDescendants()) do
+				if part:IsA("BasePart") then
+					originalCollisions[part] = part.CanCollide
+					part.CanCollide = false
+				end
+			end
+		end
 	else
 		noclipBtn.Text = "Noclip: OFF"
-		local char = player.Character
 		if char then
-			local root = char:FindFirstChild("HumanoidRootPart")
-			if root then root.CanCollide = true end
+			for _, part in ipairs(char:GetDescendants()) do
+				if part:IsA("BasePart") and originalCollisions[part] ~= nil then
+					part.CanCollide = originalCollisions[part]
+				end
+			end
 		end
+		originalCollisions = {}
 	end
 end)
 
@@ -335,8 +349,11 @@ runService.Stepped:Connect(function()
 	if noclipEnabled then
 		local char = player.Character
 		if char then
-			local root = char:FindFirstChild("HumanoidRootPart")
-			if root then root.CanCollide = false end
+			for _, part in ipairs(char:GetDescendants()) do
+				if part:IsA("BasePart") then
+					part.CanCollide = false
+				end
+			end
 		end
 	end
 end)
