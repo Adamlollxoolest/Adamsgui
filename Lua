@@ -430,15 +430,15 @@ runService.Heartbeat:Connect(function()
 	if espEnabled then updateESP() end
 end)
 
-local originalShadows = lighting.GlobalShadows
+-- Locked Lighting Enforcer Variables
 local originalFogEnd = lighting.FogEnd
 local originalFogStart = lighting.FogStart
+local originalGlobalShadows = lighting.GlobalShadows
 local originalBrightness = lighting.Brightness
 local originalAmbient = lighting.Ambient
 local originalOutdoorAmbient = lighting.OutdoorAmbient
-local removedTriggers = {}
-local removedAtmosphere = nil
-local removedPostEffects = {}
+local originalAtmosphereParent = nil
+local atmosphereObj = lighting:FindFirstChildOfClass("Atmosphere")
 
 fogBtn.MouseButton1Click:Connect(function()
 	fogEnabled = not fogEnabled
@@ -448,77 +448,48 @@ fogBtn.MouseButton1Click:Connect(function()
 	if fogEnabled then
 		fogBtn.Text = "Remove Fog: ON"
 		
-		originalShadows = lighting.GlobalShadows
 		originalFogEnd = lighting.FogEnd
 		originalFogStart = lighting.FogStart
+		originalGlobalShadows = lighting.GlobalShadows
 		originalBrightness = lighting.Brightness
 		originalAmbient = lighting.Ambient
 		originalOutdoorAmbient = lighting.OutdoorAmbient
 		
-		lighting.GlobalShadows = false
-		lighting.Brightness = 3
-		lighting.Ambient = Color3.fromRGB(255, 255, 255)
-		lighting.OutdoorAmbient = Color3.fromRGB(255, 255, 255)
-		lighting.FogEnd = 100000
-		lighting.FogStart = 0
-		
-		local atmosphere = lighting:FindFirstChildOfClass("Atmosphere")
-		if atmosphere then
-			removedAtmosphere = atmosphere
-			atmosphere.Parent = nil
-		end
-		
-		removedPostEffects = {}
-		for _, child in ipairs(lighting:GetChildren()) do
-			if child:IsA("PostEffect") then
-				table.insert(removedPostEffects, {item = child, parent = child.Parent})
-				child.Parent = nil
-			end
-		end
-		
-		removedTriggers = {}
-		for _, obj in ipairs(workspace:GetDescendants()) do
-			local name = obj.Name:lower()
-			if name:find("fog") or name:find("blind") or name:find("darkness") or name:find("hazard") or name:find("jumpparent") then
-				if obj:IsA("BasePart") then
-					table.insert(removedTriggers, {item = obj, parent = obj.Parent})
-					obj.Parent = nil
-				elseif obj:IsA("Script") or obj:IsA("LocalScript") then
-					table.insert(removedTriggers, {item = obj, parent = obj.Parent})
-					obj.Disabled = true
-				end
-			end
+		atmosphereObj = lighting:FindFirstChildOfClass("Atmosphere")
+		if atmosphereObj then
+			originalAtmosphereParent = atmosphereObj.Parent
+			atmosphereObj.Parent = nil
 		end
 	else
 		fogBtn.Text = "Remove Fog: OFF"
 		
-		lighting.GlobalShadows = originalShadows
+		lighting.FogEnd = originalFogEnd
+		lighting.FogStart = originalFogStart
+		lighting.GlobalShadows = originalGlobalShadows
 		lighting.Brightness = originalBrightness
 		lighting.Ambient = originalAmbient
 		lighting.OutdoorAmbient = originalOutdoorAmbient
-		lighting.FogEnd = originalFogEnd
-		lighting.FogStart = originalFogStart
 		
-		if removedAtmosphere then
-			removedAtmosphere.Parent = lighting
-			removedAtmosphere = nil
+		if atmosphereObj and originalAtmosphereParent then
+			atmosphereObj.Parent = originalAtmosphereParent
 		end
+	end
+end)
+
+-- Continuously lock lighting properties if Remove Fog is ON
+runService.Heartbeat:Connect(function()
+	if fogEnabled then
+		lighting.FogEnd = 100000
+		lighting.FogStart = 0
+		lighting.GlobalShadows = false
+		lighting.Brightness = 3
+		lighting.Ambient = Color3.fromRGB(255, 255, 255)
+		lighting.OutdoorAmbient = Color3.fromRGB(255, 255, 255)
 		
-		for _, data in ipairs(removedPostEffects) do
-			if data.item and data.parent then data.item.Parent = data.parent end
+		local atmos = lighting:FindFirstChildOfClass("Atmosphere")
+		if atmos then
+			atmos.Parent = nil
 		end
-		removedPostEffects = {}
-		
-		for _, data in ipairs(removedTriggers) do
-			if data.item and data.parent then
-				if data.item:IsA("BasePart") then
-					data.item.Parent = data.parent
-				elseif data.item:IsA("Script") or data.item:IsA("LocalScript") then
-					data.item.Disabled = false
-				end
-			end
-		end
-		removedTriggers = {}
 	end
 end)
 
