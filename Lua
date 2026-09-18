@@ -302,15 +302,20 @@ end
 
 applyBtn.MouseButton1Click:Connect(applyStats)
 
+-- Updated Reset Stats to scan current game values on click
 resetBtn.MouseButton1Click:Connect(function()
-	speedBox.Text = tostring(defaultSpeed)
-	jumpBox.Text = tostring(defaultJump)
 	local char = player.Character
 	if char then
 		local hum = char:FindFirstChildOfClass("Humanoid")
 		if hum then
+			-- Temporarily clear our custom speed/jump modification if possible, 
+			-- or re-scan from character's base properties if set by game scripts.
+			-- Setting WalkSpeed back to 16 or re-caching:
+			cacheDefaults()
 			hum.WalkSpeed = defaultSpeed
 			hum.JumpPower = defaultJump
+			speedBox.Text = tostring(defaultSpeed)
+			jumpBox.Text = tostring(defaultJump)
 		end
 	end
 end)
@@ -430,7 +435,6 @@ runService.Heartbeat:Connect(function()
 	if espEnabled then updateESP() end
 end)
 
--- Locked Lighting Enforcer Variables
 local originalFogEnd = lighting.FogEnd
 local originalFogStart = lighting.FogStart
 local originalGlobalShadows = lighting.GlobalShadows
@@ -476,7 +480,6 @@ fogBtn.MouseButton1Click:Connect(function()
 	end
 end)
 
--- Continuously lock lighting properties if Remove Fog is ON
 runService.Heartbeat:Connect(function()
 	if fogEnabled then
 		lighting.FogEnd = 100000
