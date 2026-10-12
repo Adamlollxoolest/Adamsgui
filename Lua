@@ -202,16 +202,6 @@ local btnCorner5 = Instance.new("UICorner")
 btnCorner5.CornerRadius = UDim.new(0, 6)
 btnCorner5.Parent = fogBtn
 
-local creditLabel = Instance.new("TextLabel")
-creditLabel.Size = UDim2.new(0, 200, 0, 20)
-creditLabel.Position = UDim2.new(0.5, -100, 0, 260)
-creditLabel.BackgroundTransparency = 1
-creditLabel.Text = "Made by: Admmmo6"
-creditLabel.TextColor3 = Color3.fromRGB(140, 140, 140)
-creditLabel.TextSize = 12
-creditLabel.Font = Enum.Font.SourceSansItalic
-creditLabel.Parent = contentContainer
-
 local noclipEnabled = false
 local espEnabled = false
 local fogEnabled = false
@@ -302,15 +292,11 @@ end
 
 applyBtn.MouseButton1Click:Connect(applyStats)
 
--- Updated Reset Stats to scan current game values on click
 resetBtn.MouseButton1Click:Connect(function()
 	local char = player.Character
 	if char then
 		local hum = char:FindFirstChildOfClass("Humanoid")
 		if hum then
-			-- Temporarily clear our custom speed/jump modification if possible, 
-			-- or re-scan from character's base properties if set by game scripts.
-			-- Setting WalkSpeed back to 16 or re-caching:
 			cacheDefaults()
 			hum.WalkSpeed = defaultSpeed
 			hum.JumpPower = defaultJump
